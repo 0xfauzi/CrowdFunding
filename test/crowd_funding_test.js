@@ -1,4 +1,4 @@
-let TestCrowdFundingWithDeadline = artifacts.require('./TestCrowdFundingWithDeadline')
+let TestCrowdFundingWithDeadline = artifacts.require('./TestCrowdFundingWithDeadline');
 
 contract('TestCrowdFundingWithDeadline', function (accounts) {
 
@@ -73,7 +73,7 @@ contract('TestCrowdFundingWithDeadline', function (accounts) {
 
     it('crowdfunding succeeeded', async function () {
         await contract.contribute({ value: FIVE_ETH, from: contractCreator });
-    
+
         await contract.setCurrentTime(601);
         await contract.finishCrowdFunding();
         let state = await contract.state.call();
@@ -81,21 +81,21 @@ contract('TestCrowdFundingWithDeadline', function (accounts) {
         expect(state.valueOf().toString()).to.equal(SUCCEEDED_STATE);
     });
 
-    it('crowdfunding failed', async function() {
+    it('crowdfunding failed', async function () {
         await contract.setCurrentTime(601);
         await contract.finishCrowdFunding();
         let state = await contract.state.call();
 
         expect(state.valueOf().toString()).to.eql(FAILED_STATE);
     });
-    
-    it('collected money paid out', async function() {
-        await contract.contribute({value: FIVE_ETH, from: contractCreator});
+
+    it('collected money paid out', async function () {
+        await contract.contribute({ value: FIVE_ETH, from: contractCreator });
         await contract.setCurrentTime(601);
         await contract.finishCrowdFunding();
 
         let initAmount = await web3.eth.getBalance(beneficiary);
-        await contract.collect({from: contractCreator});
+        await contract.collect({ from: contractCreator });
 
         let newBalance = await web3.eth.getBalance(beneficiary);
         expect(newBalance - initAmount).to.equal(0);
@@ -104,26 +104,28 @@ contract('TestCrowdFundingWithDeadline', function (accounts) {
         expect(fundingState.valueOf().toString()).to.equal(PAID_OUT_STATE);
     });
 
-    it('withdraw funds from the contract', async function() {
-        await contract.contribute({value: ONE_ETH, from: contractCreator});
+    it('withdraw funds from the contract', async function () {
+        await contract.contribute({ value: ONE_ETH, from: contractCreator });
         await contract.setCurrentTime(601);
         await contract.finishCrowdFunding();
 
-        await contract.withdraw({from: contractCreator});
+        await contract.withdraw({ from: contractCreator });
         let amount = await contract.amounts.call(contractCreator);
         expect(amount.toNumber()).to.equal(0);
     });
 
-    it('event is emitted', async function() {
-        let watcher = contract.CampaignFinished();
+    it('event is emitted', async function () {
+        contract.CampaignFinished({}, function(error, event) {
+            if (error) {
+                console.log(error);
+                expect.fail();
+            } else if (event) {
+                expect((event.args.totalCollected).toString()).to.be.equal('0');
+                expect(event.args.succeeded).to.be.false;
+
+            }
+        });
         await contract.setCurrentTime(601);
         await contract.finishCrowdFunding();
-
-        // web3.setProvider(new Web3.providers.WebsocketProvider('ws://localhost:8546'));
-
-        let events = await watcher.get();
-        let event = events[0];
-        expect(event.args.totalCollected.toNumber()).to.equal(0);
-        expect(event.args.succeeded).to.equal(false);
     });
 });

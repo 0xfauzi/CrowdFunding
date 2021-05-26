@@ -18,6 +18,8 @@
  *
  */
 
+const Web3 = require("web3");
+
 // const HDWalletProvider = require('@truffle/hdwallet-provider');
 // const infuraKey = "fj4jll3k.....";
 //
@@ -43,10 +45,13 @@ module.exports = {
     // options below to some value.
     //
     development: {
-     host: "127.0.0.1",     // Localhost (default: none)
-     port: 9545,            // Standard Ethereum port (default: none)
-     network_id: "*",       // Any network (default: none)
-     websocket: true 
+      provider: function() {
+        return new Web3.providers.WebsocketProvider("ws://127.0.0.1:9545")
+      },
+      // host: "127.0.0.1",     // Localhost (default: none)
+      // port: 9545,            // Standard Ethereum port (default: none)
+      network_id: "*",       // Any network (default: none)
+      websocket: true
     },
     // Another network with more advanced options...
     // advanced: {
